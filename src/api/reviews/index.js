@@ -70,7 +70,7 @@ reviewsRouter.put("/:reviewid", async (req, res, next) => {
   try {
     const updatedReview = await reviewsModel.findByIdAndUpdate(
       req.params.reviewid,
-      req.body,
+      {...req.body},
       { new: true, runValidators: true }
     );
     if (updatedReview) {
