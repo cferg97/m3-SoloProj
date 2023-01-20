@@ -2,8 +2,20 @@ import express from "express";
 import createHttpError from "http-errors";
 import productsModel from "./model.js";
 import q2m from "query-to-mongo";
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 const productsRouter = express.Router();
+
+const cloudinaryUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "products",
+    },
+  }),
+}).single("imageUrl");
 
 productsRouter.get("/", async (req, res, next) => {
   try {
@@ -20,9 +32,12 @@ productsRouter.get("/", async (req, res, next) => {
   }
 });
 
-productsRouter.post("/", async (req, res, next) => {
+productsRouter.post("/", cloudinaryUpload, async (req, res, next) => {
   try {
-    const newProduct = new productsModel(req.body);
+    const newProduct = await new productsModel({
+      ...req.body,
+      imageUrl: req.file.path,
+    });
     const { _id } = await newProduct.save();
     res.status(201).send({ _id });
   } catch (err) {
